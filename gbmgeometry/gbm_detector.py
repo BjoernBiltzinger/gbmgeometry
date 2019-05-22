@@ -21,7 +21,8 @@ class GBMDetector(object):
 
         self.update_position(quaternion, sc_pos, time)
 
-        self._xyz = np.array([np.cos(self._az)*np.sin(self._zen), np.sin(self._az)*np.sin(self._zen), np.cos(self._zen)])
+        self._xyz = np.array([np.cos(self._az*np.pi/180)*np.cos(self._zen*np.pi/180), np.sin(self._az*np.pi/180)*np.cos(self._zen*np.pi/180), np.sin(self._zen*np.pi/180)])
+        #self._xyz = np.array([np.cos(self._az)*np.sin(self._zen), np.sin(self._az)*np.sin(self._zen), np.cos(self._zen)])
 
         
 
@@ -263,7 +264,28 @@ class GBMDetector(object):
         :return: the det pointing in icrs frame (ra, dec
         """
         return [(self._center.icrs).ra.deg, (self._center.icrs).dec.deg]
-
+    def det_angle_to_ra_dec_icrs(self,ra,dec):
+        """
+        
+        :return: the angle between the det and a point defined by ra and dec in icrs frame (ra and dec in deg)
+        """
+        point = SkyCoord(ra*u.deg, dec*u.deg, frame='icrs')
+        angle = self._center.separation(point)
+        return angle
+    #TEST EARTH FRAME
+    @property
+    def pointing_vector_earth_frame(self):
+        return self.gbm_to_geo(self._xyz)
+    @property
+    def pointing_earth_frame_phi(self):
+        point_earth_frame = self.gbm_to_geo(self._xyz)
+        phi = np.arctan2(point_earth_frame[1],point_earth_frame[0])
+        return phi
+    @property
+    def pointing_earth_frame_theta(self):
+        point_earth_frame = self.gbm_to_geo(self._xyz)
+        theta = np.arcsin(point_earth_frame[2])
+        return theta
     def geo_to_gbm(self, pos_geo):
         """ Compute the transformation from heliocentric Sgr coordinates to
             spherical Galactic.
